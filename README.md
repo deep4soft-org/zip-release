@@ -14,11 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.5
+      uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
         filename: 'release.zip'
         exclusions: '*.git* /*node_modules/* .editorconfig'
+        verbose: 'yes'
 ```
 
 The generated archive will be placed as specified by `directory`, `path` and `filename`.
@@ -50,17 +51,14 @@ Default: `.`
 
 The path to the files or directory that should be archived, relative to `directory`.
 
-Path with whitespace is currently not supported because of the limitation of GitHub actions regarding the parameter formatting (no YAML double quoting).
-A solution based on [similar issues](https://github.com/rojopolis/spellcheck-github-actions/commit/0d2f3ab70398848fd52892971396beff29d3fd61) will soon be implemented.
-
 ### `type`
 Default: `zip`
 
-Either `zip` or `tar` or `7z`.
+Either `zip` or `7z` or `tar` or `tar.gz` or `tar.xz`
 
-Defines if either a ZIP-file is created, or a tar archive (the latter gzipped).
+Defines if either a zip file, 7z or tar file is created; tar archive compressed with gzip or xz.
 
-On Windows platform 7zip is used to zip files as zip command is unavailable there.
+On Windows platform 7zip is used to zip files as zip command is not available there.
 
 ### `exclusions`
 Default: none
@@ -85,20 +83,57 @@ For example:
 
 ```recursive_exclusions: *.txt``` will exclude files ending with `.txt` in any subdirectory.
 
+### `ignore_git`
+Default: yes
+
+Default setting: ignore .git/ folder
+
+Set ```ignore_git: 'no'``` to add to archive .git/ folder
+
+### `volume_size:`
+Default: ''
+
+Set volume size for `type: 7z` in bytes or accepted suffix values: b|k|m|g
+
+Example:</br>
+ volume_size: 2g, means volume size is 2 GBytes</br>
+ volume_size: 1024k, means volume size is 1 MByte</br>
+ volume_size: 1073741824, means volume size is 1 GByte or 1024 MBytes</br>
+
+### `env_variable`
+Default: ZIP_RELEASE_ARCHIVE
+
+env variable name to set after archive creation
+
+### `verbose`
+Default: no
+
+set to no for quiet operations
+set to yes to show output of filenames added to archive
+
 ### `custom`
 Default: none
 
-Provide any custom parameters to the zipping command.
+Provide any custom parameters to the command.
 
 For example:
 
 ```custom: --ignore-failed-read``` option used with `tar` command, which allows to ignore and continue on unreadable files. 
 
-### `command`
-Default: none
-
-An extra command that will run before zipping.
-
-For example:
-
-```command: "mkdir -p release"``` can be used to create a directory where the archived file can be stored to fix `tar` issue with `file changed as we read it` error
+### `outputs:`
+```
+  volumes_list_name:
+    description: 'Name of file list, containing volumes filenames'
+    value: ${{ steps.zip_release_run.outputs.volumes_list_name }}
+  volumes_number:
+    description: 'Number of volumes'
+    value: ${{ steps.zip_release_run.outputs.volumes_number }}
+  volumes_files:
+    description: 'Names of volumes, concatenated with :'
+    value: ${{ steps.zip_release_run.outputs.volumes_files }}
+```
+```example:
+echo "VOLUMES_LIST_NAME=${{ steps.zip_release_action.outputs.VOLUMES_LIST_NAME }}";
+echo "VOLUMES_NUMBER=${{ steps.zip_release_action.outputs.VOLUMES_NUMBER }}";
+echo "VOLUMES_FILES=${{ steps.zip_release_action.outputs.VOLUMES_FILES }}";
+```

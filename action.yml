@@ -17,6 +17,10 @@ inputs:
     description: 'Working directory before zipping'
     default: '.'
     required: false
+  inclusions:
+    description: 'List of included files / directories'
+    default: ''
+    required: false
   exclusions:
     description: 'List of excluded files / directories'
     default: ''
@@ -25,30 +29,62 @@ inputs:
     description: 'List of excluded files / directories with recursive wildcards (only applies on Windows with `zip` type)'
     default: ''
     required: false
+  ignore_git:
+    description: 'ignore .git/'
+    default: 'yes'
+    required: false
   custom:
-    description: 'Provide any custom parameters to the zipping command'
+    description: 'Provide any custom parameters to the command'
     default: ''
     required: false
   type:
-    description: 'Tool to use for archiving'
+    description: 'Archive type (zip / 7z / tar / tar.gz / tar.xz)'
     default: 'zip'
     required: false
-  command:
-    description: 'An extra command that will run before zipping'
+  volume_size:
+    description: 'Volume size'
     default: ''
     required: false
+  env_variable:
+    description: 'env variable name to set'
+    default: 'ZIP_RELEASE_ARCHIVE'
+    required: false
+  verbose:
+    description: 'Set verbose (yes/no)'
+    default: 'no'
+    required: false
+  debug:
+    description: 'Set debug mode (yes/no)'
+    default: 'no'
+    required: false
+outputs:
+  volumes_list_name:
+    description: 'Name of file list, containing volumes filenames'
+    value: ${{ steps.zip_release_run.outputs.volumes_list_name }}
+  volumes_number:
+    description: 'Number of volumes'
+    value: ${{ steps.zip_release_run.outputs.volumes_number }}
+  volumes_files:
+    description: 'Names of volumes, concatenated with :'
+    value: ${{ steps.zip_release_run.outputs.volumes_files }}
 runs:
   using: composite
   steps:
-    - shell: bash
+    - id: zip_release_run
       env:
         INPUT_FILENAME: ${{ inputs.filename }}
         INPUT_PATH: ${{ inputs.path }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
+        INPUT_INCLUSIONS: ${{ inputs.inclusions }}
         INPUT_EXCLUSIONS: ${{ inputs.exclusions }}
         INPUT_RECURSIVE_EXCLUSIONS: ${{ inputs.recursive_exclusions }}
+        INPUT_IGNORE_GIT: ${{ inputs.ignore_git }}
         INPUT_CUSTOM: ${{ inputs.custom }}
         INPUT_TYPE: ${{ inputs.type }}
-        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_VOLUME_SIZE: ${{ inputs.volume_size }}
+        INPUT_ZIP_RELEASE_ARCHIVE: ${{ inputs.env_variable }}
+        INPUT_VERBOSE: ${{ inputs.verbose }}
+        DEBUG_MODE: ${{ inputs.debug }}
+        MSYS_NO_PATHCONV: true
+      shell: bash
       run: $GITHUB_ACTION_PATH/entrypoint.sh
-
